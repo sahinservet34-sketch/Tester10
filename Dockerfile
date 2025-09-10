@@ -13,8 +13,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build the application with explicit commands
-RUN npx vite build && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+# Build application directly without npm scripts to avoid PATH issues
+RUN npx vite build
+RUN npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
 
 # Remove dev dependencies to reduce image size
 RUN npm ci --only=production && npm cache clean --force

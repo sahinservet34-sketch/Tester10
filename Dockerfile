@@ -14,7 +14,8 @@ RUN npm ci
 COPY . .
 
 # Build application directly without npm scripts to avoid PATH issues
-RUN npx vite build
+# Set Vite root to client directory while staying in /app for alias resolution
+RUN VITE_ROOT=client npx vite build --mode production
 RUN npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
 
 # Remove dev dependencies to reduce image size

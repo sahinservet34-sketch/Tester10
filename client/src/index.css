@@ -1,0 +1,195 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --radius: 16px;
+  
+  /* Brand Colors */
+  --brand-500: hsl(211, 69%, 14%);
+  --brand-400: hsl(213, 65%, 22%);
+  --brand-300: hsl(214, 62%, 30%);
+  --gold-500: hsl(43, 65%, 59%);
+  --gold-600: hsl(43, 70%, 48%);
+  
+  /* Semantic Colors */
+  --success: hsl(153, 84%, 37%);
+  --danger: hsl(346, 95%, 43%);
+  --warning: hsl(45, 100%, 51%);
+  
+  /* Theme Colors */
+  --background: hsl(228, 50%, 8%);
+  --foreground: hsl(43, 23%, 96%);
+  --card: hsl(227, 46%, 13%);
+  --card-foreground: hsl(43, 23%, 96%);
+  --popover: hsl(227, 46%, 13%);
+  --popover-foreground: hsl(43, 23%, 96%);
+  --primary: hsl(211, 69%, 14%);
+  --primary-foreground: hsl(43, 23%, 96%);
+  --secondary: hsl(214, 62%, 30%);
+  --secondary-foreground: hsl(43, 23%, 96%);
+  --muted: hsl(215, 16%, 57%);
+  --muted-foreground: hsl(215, 16%, 57%);
+  --accent: hsl(43, 65%, 59%);
+  --accent-foreground: hsl(211, 69%, 14%);
+  --destructive: hsl(346, 95%, 43%);
+  --destructive-foreground: hsl(43, 23%, 96%);
+  --border: hsl(214, 62%, 30%);
+  --input: hsl(214, 62%, 30%);
+  --ring: hsl(43, 65%, 59%);
+  
+  /* Chart Colors */
+  --chart-1: hsl(211, 69%, 14%);
+  --chart-2: hsl(153, 84%, 37%);
+  --chart-3: hsl(43, 65%, 59%);
+  --chart-4: hsl(147, 78%, 42%);
+  --chart-5: hsl(341, 75%, 51%);
+  
+  /* Sidebar Colors */
+  --sidebar: hsl(227, 46%, 13%);
+  --sidebar-foreground: hsl(43, 23%, 96%);
+  --sidebar-primary: hsl(211, 69%, 14%);
+  --sidebar-primary-foreground: hsl(43, 23%, 96%);
+  --sidebar-accent: hsl(43, 65%, 59%);
+  --sidebar-accent-foreground: hsl(211, 69%, 14%);
+  --sidebar-border: hsl(214, 62%, 30%);
+  --sidebar-ring: hsl(43, 65%, 59%);
+  
+  /* Fonts */
+  --font-display: 'Bebas Neue', 'Impact', sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-numeric: 'Rajdhani', monospace;
+}
+
+.dark {
+  --background: hsl(228, 50%, 8%);
+  --foreground: hsl(43, 23%, 96%);
+  --card: hsl(227, 46%, 13%);
+  --card-foreground: hsl(43, 23%, 96%);
+  --popover: hsl(227, 46%, 13%);
+  --popover-foreground: hsl(43, 23%, 96%);
+  --primary: hsl(211, 69%, 14%);
+  --primary-foreground: hsl(43, 23%, 96%);
+  --secondary: hsl(214, 62%, 30%);
+  --secondary-foreground: hsl(43, 23%, 96%);
+  --muted: hsl(215, 16%, 57%);
+  --muted-foreground: hsl(215, 16%, 57%);
+  --accent: hsl(43, 65%, 59%);
+  --accent-foreground: hsl(211, 69%, 14%);
+  --destructive: hsl(346, 95%, 43%);
+  --destructive-foreground: hsl(43, 23%, 96%);
+  --border: hsl(214, 62%, 30%);
+  --input: hsl(214, 62%, 30%);
+  --ring: hsl(43, 65%, 59%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+  }
+  
+  .font-display {
+    font-family: var(--font-display);
+  }
+  
+  .font-numeric {
+    font-family: var(--font-numeric);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  .bg-gradient-arena {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 60%, hsl(var(--accent)) 100%);
+  }
+  
+  .text-shadow-glow {
+    text-shadow: 0 0 24px hsla(var(--accent), 0.55);
+  }
+  
+  .card-shadow {
+    box-shadow: 0 10px 30px hsla(5, 10%, 20%, 0.35);
+  }
+  
+  .glow-gold {
+    box-shadow: 0 0 24px hsla(var(--accent), 0.55);
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes pulse-gold {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-pulse-gold {
+  animation: pulse-gold 0.9s infinite;
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+/* Fix for datetime-local input styling */
+input[type="datetime-local"] {
+  color: hsl(var(--foreground)) !important;
+  background-color: hsl(var(--background)) !important;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(var(--foreground-invert, 0.5));
+  cursor: pointer;
+}
+
+/* Dark mode support for datetime input */
+.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+/* Custom Tab Styling for better visibility */
+[data-state="active"][role="tab"] {
+  background-color: hsl(43, 65%, 59%) !important; /* Gold accent for active tab */
+  color: hsl(211, 69%, 14%) !important; /* Dark blue text */
+  border: 2px solid hsl(43, 70%, 48%) !important;
+  font-weight: 600 !important;
+}
+
+[data-state="inactive"][role="tab"] {
+  background-color: hsl(214, 62%, 30%) !important; /* Secondary blue for inactive tab */
+  color: hsl(43, 23%, 96%) !important; /* Light text */
+  border: 2px solid hsl(211, 69%, 14%) !important;
+  font-weight: 500 !important;
+}
+
+/* Tab hover effects */
+[role="tab"]:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+  transition: all 0.2s ease;
+}
+
+/* TabsList background styling */
+[role="tablist"] {
+  background-color: hsl(227, 46%, 13%) !important; /* Dark card background */
+  border: 1px solid hsl(214, 62%, 30%) !important; /* Border matching theme */
+  padding: 4px !important;
+  border-radius: 12px !important;
+}

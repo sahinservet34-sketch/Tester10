@@ -1,0 +1,278 @@
+You are an elite DevOps + Full-Stack + UI/UX engineer. Provision and deploy a production-ready web app named **Supano’s** on a fresh DigitalOcean Ubuntu 22.04 droplet.
+
+## 0) GLOBAL REQUIREMENTS
+- Monorepo structure:
+  /apps/web (Next.js 14 App Router + Tailwind + shadcn/ui)
+  /apps/api (Node.js 20 + Express + Zod + Prisma)
+  /packages/ui (shared React components, icons, hooks)
+  /infra (docker, nginx, certbot, scripts)
+- Everything containerized with Docker. Orchestrate via docker-compose.
+- Reverse proxy: Nginx on :80/:443 with HTTP->HTTPS redirect, Let’s Encrypt (certbot) for example domain `supanos.example.com`.
+- Public ports: only 80/443. Internal networks for api/db/redis.
+- Environment variables via .env files and docker secrets.
+- Healthchecks for every container. Auto-restart on failure.
+- Observability: request logs (JSON), error logs, basic metrics, rotating logs.
+
+## 1) STACK & SERVICES
+- Frontend: Next.js 14 (App Router), React 18, TypeScript, TailwindCSS, shadcn/ui, lucide-react icons, Framer Motion.
+- Backend: Node.js 20, Express, Prisma ORM, Zod validation, JWT auth, bcrypt.
+- DB: PostgreSQL 15 (volume persisted).
+- Cache/Queue: Redis (for scoreboard caching, rate-limit, jobs).
+- File storage: Local /uploads mapped in docker volume; serve via Nginx at /media. (Future-ready S3 driver interface.)
+- Mail: SMTP via env (RESERVATION_EMAIL_FROM, SMTP_HOST/USER/PASS).
+- Tests: Vitest/Jest for backend, Playwright for web smoke tests.
+- CI: simple GitHub Actions workflow to build & run tests on push.
+
+## 2) DOMAIN & TLS
+- Nginx server_name = supanos.example.com (placeholder). Issue and auto-renew Let’s Encrypt certificates with certbot container. HTTP→HTTPS redirect; HSTS enabled.
+
+## 3) SECURITY
+- JWT auth with httpOnly cookies for Admin. CSRF token on admin forms.
+- Helmet, CORS allow only web origin.
+- Rate limiting via Redis (e.g., 100 req/5min per IP on /api public endpoints).
+- Validation: Zod schemas for every API payload.
+- Strong password policy; bcrypt saltRounds 12.
+- Prisma row-level checks based on `role` (admin/user) in API handlers.
+
+## 4) DATABASE (Prisma schema)
+Models (include createdAt/updatedAt defaults):
+- User(id, name, email UNIQUE, passwordHash, role: 'admin'|'staff'|'user', isActive)
+- MenuCategory(id, name UNIQUE, description, order)
+- MenuItem(id, categoryId FK, name, description, price DECIMAL(10,2), imageUrl, isAvailable BOOLEAN, tags TEXT[], spicyLevel INT?)
+- Event(id, title, description, dateTime TIMESTAMP, sportType: 'NFL'|'MLB'|'Custom', imageUrl, isFeatured BOOLEAN)
+- Reservation(id, fullName, email, phone, dateTime, people INT, notes, status: 'pending'|'confirmed'|'cancelled')
+- Setting(id, key UNIQUE, value JSONB)  // site-wide settings, hours, socials, theme switches
+- Upload(id, fileName, url, mime, size, width?, height?)
+- AuditLog(id, actorUserId?, action, targetType, targetId, meta JSONB)
+
+Migrations auto-run at startup if needed.
+
+## 5) SEED DATA
+- Admin user: email=admin@supanos.bar, password=Supanos!2025 (change on first login).
+- Menu categories: Starters, Mains, Burgers, Wings, Pizzas, Drinks, Cocktails, Shots, Desserts.
+- 12+ örnek ürün (ör: Buffalo Wings, Smash Burger, IPA Pint, House Margarita, Tektekçi-style Shots).
+- 4 etkinlik: NFL Sunday Night, MLB Playoff Night, Trivia Thursday, Live DJ Friday.
+- Settings: hours (Mon–Sun), address, phone, email, socials, hero slogans.
+
+## 6) BACKEND API (Express)
+- Routes (JSON):
+  Auth: POST /api/auth/login, POST /api/auth/logout, GET /api/auth/me
+  Users: GET/POST/PATCH/DELETE /api/users (admin only)
+  Menu: 
+    - GET /api/menu/categories
+    - POST /api/menu/categories (admin)
+    - GET /api/menu/items?categoryId&search
+    - POST /api/menu/items (admin)  // {name, categoryId, price, description, imageUrl, tags[], isAvailable}
+    - PATCH /api/menu/items/:id (admin)
+    - DELETE /api/menu/items/:id (admin)
+  Events:
+    - GET /api/events?featured=1
+    - POST/PATCH/DELETE /api/events (admin)
+  Reservations:
+    - POST /api/reservations  // public booking
+    - GET /api/reservations (admin, with filters date/status)
+    - PATCH /api/reservations/:id (status update)
+    - On new confirmed reservation -> send email to customer + bar inbox
+  Uploads:
+    - POST /api/uploads (multipart/form-data, admin) → stores to /uploads and returns {url}
+  Scores (NFL/MLB):
+    - GET /api/scores?date=YYYY-MM-DD
+      * Provider interface:
+        Primary: SPORTS_PROVIDER=“sportsdata” (use API_KEY)
+        Fallback: “espn” scraper (scoreboard JSON endpoints)
+      * Cache to Redis for 60s. If provider fails, serve last cached snapshot.
+
+- Middlewares: helmet, cors, morgan(json), rateLimit(redis), zodValidate.
+- Error handling: unified JSON {error:{code,message,details}}.
+
+## 7) FRONTEND (Next.js) – ROUTES
+- /               → Landing (hero, CTA “Reserve a Table”, featured events, live ticker)
+- /menu           → Categories tabs + grid of MenuItemCards; filters (spicy/tags/price)
+- /events         → List upcoming Events + details modals
+- /reservations   → Booking form (date/time picker, people, contact)
+- /scores         → Live Scores dashboard (NFL + MLB), date switcher, in-game status
+- /admin/login    → Admin Auth
+- /admin/dashboard
+  - /admin/menu/categories  (CRUD)
+  - /admin/menu/items       (table + create/edit modal, image upload)
+  - /admin/events           (CRUD)
+  - /admin/reservations     (kanban: pending/confirmed/cancelled)
+  - /admin/settings         (hours, contact, hero, theme flags)
+
+SSR/ISR where appropriate (menu/events static revalidate 60s). Client components for real-time (scores).
+
+## 8) SPORTS BAR UI – DESIGN SYSTEM (VERY DETAILED)
+### Brand & Tone
+- Enerjik, maç gecesi odaklı, okunaklı ve kontrastı yüksek; sıcak altın tonları, derin lacivert zemin; minimal neon vurgu.
+
+### Colors (CSS variables & Tailwind theme)
+- Primary Navy:        #0B1F3B  (bg-primary, text-primary-foreground=white)
+- Gold Accent:         #E0B34C
+- Off-White:           #F8F7F3
+- Turf Green:          #0EAD69  (positive, availability, “Open” badge)
+- Baseball Red:        #D90429  (alerts, score losing state)
+- Slate Ink:           #0F172A  (neutral text)
+- Neutral Scale:       #0B1220..#F1F5F9 (use Tailwind slate but override hues)
+
+Semantic tokens:
+- --brand-500: #0B1F3B
+- --brand-400: #13325E
+- --brand-300: #1D4A7A
+- --gold-500:  #E0B34C
+- --gold-600:  #C89A2E
+- --success:   #0EAD69
+- --danger:    #D90429
+- --warning:   #FFB703
+- --fg:        #10151F
+- --bg:        #0A0F1E
+- --card:      #0E1426
+- --muted:     #8B9BB6
+- Gradients:
+  - “Arena”: linear-gradient(135deg,#0B1F3B 0%,#1D4A7A 60%,#E0B34C 100%)
+  - “NeonGold”: radial-gradient(circle at 20% 30%, #E0B34C 0%, transparent 40%)
+
+### Typography (Google Fonts)
+- Display/Headlines: **Bebas Neue** (fallback: Impact, system-sans) – uppercase, tight tracking
+  - H1: 56/60, -1% letter-spacing
+  - H2: 40/44
+  - H3: 28/32
+- Body/UI: **Inter** (fallback: system-ui, Segoe UI)
+  - Base: 16/26
+  - Small: 14/22
+- Numbers (scores, prices): **Rajdhani** semi-condensed for scoreboard and price tags
+- Usage:
+  - Headlines uppercase; body normal case.
+  - Use numeric font-variant for scoreboard (tabular-nums).
+
+### Spacing & Radii
+- 4pt scale: 4,8,12,16,24,32
+- Cards/Inputs radius: 16px (rounded-2xl)
+- Buttons radius: 12px
+- Menu images radius: 20px (large visuals)
+
+### Shadows & Surfaces
+- Soft ambient shadow for cards: 0 10px 30px rgba(5,10,20,.35)
+- Neon gold glow for highlights: 0 0 24px rgba(224,179,76,.55)
+- Elevation tokens: card, popover, modal; hover increases y-offset subtly.
+
+### Components (shadcn/ui as base; Tailwind theming)
+- TopBar: sticky, translucent navy, subtle blur; left logo wordmark “Supano’s”; center nav; right CTA “Reserve a Table” (gold).
+- **ScoreTicker** (global): slim marquee band under TopBar; live NFL/MLB updates; team abbreviations, records, inning/quarter, live dot pulsing gold.
+- **HeroBanner**: dark navy with Arena gradient, big headline “Game On at Supano’s”, CTA (Reserve / View Menu), background faint stadium lights SVG.
+- **MenuCategoryTabs**: pill tabs (gold active), animated underline.
+- **MenuItemCard**: image (16:9), title, short desc, price in Rajdhani; tags (Spicy, Vegan, New); add-to-favorites (localStorage).
+- **EventCard**: date badge (gold), sportType chip (NFL/MLB/Custom), banner image.
+- **ReservationForm**: stepper (details → date/time → confirm); success state with confetti (reduced-motion aware).
+- **AdminTable**: compact density, column sorting, search, bulk actions; edit in modal drawer.
+- **UploadDropzone**: drag&drop, previews, server-side resize (sharp), webp output.
+- **Toast/Alert**: gold accent for success, red for errors.
+- **Footer**: hours, map link, socials (X/IG/FB), legal links.
+
+### Interactions & Motion (Framer Motion)
+- Micro-interactions on hover: scale 1.02, shadow intensify.
+- Page transitions: fade + slight y-lift (150ms).
+- Score live-dot pulse: 900ms infinite (respect prefers-reduced-motion).
+- Button press: 96% scale, spring back.
+
+### Accessibility
+- WCAG AA contrast for text on navy and card surfaces.
+- Focus rings: 2px gold outline + 1px inner dark ring.
+- ARIA labels on scoreboard items, live-region polite updates.
+- Keyboard nav complete; skip-to-content link.
+
+### Iconography
+- lucide-react: beer, sandwich, football, baseball, calendar, clock, phone, map-pin, upload, settings.
+- Score icons: football outline, baseball outline with small stroke.
+
+### Tailwind Config (instructions)
+- Extend theme with brand colors, fonts (Bebas Neue, Inter, Rajdhani), shadows, radii.
+- Safelist classes used via dynamic tokens for category chips & badges.
+
+## 9) ADMIN PANEL FLOWS
+- Login (email/password) → /admin/dashboard
+- Menu → Categories (CRUD, reorder via drag) → Items (CRUD)
+  - Create Item: name, category, price, desc, tags[], spicyLevel, image upload; toggle availability.
+- Events → create sports/custom event; set featured/home hero takeover.
+- Reservations → columns by status; actions: confirm (sends email), cancel (sends email with reason).
+- Settings → hours, contact, hero copy, theme toggles, socials.
+- Audit trail saved to AuditLog with actor + target.
+
+## 10) LIVE SCORES INTEGRATION
+- `GET /api/scores?date=YYYY-MM-DD`
+- Provider interface:
+  - SPORTS_PROVIDER=sportsdata | espn
+  - SPORTS_API_KEY=xxxx (if sportsdata)
+- Normalize to:
+  {
+    league: "NFL"|"MLB",
+    games: [{
+      id, startTime, status: "scheduled"|"live"|"final",
+      home:{abbr,name,score}, away:{abbr,name,score},
+      details:{quarter|inning, clock|outs, possession?},
+    }]
+  }
+- Cache Redis key: scores:{date} for 60s; stale-while-revalidate: 2m.
+- Frontend ScoreTicker (global) uses SWR polling (30s) + page /scores with filters and date selector.
+
+## 11) EMAIL TEMPLATES
+- Reservation confirmation/cancellation (MJML/React-email). Branded header (logo), gold buttons, hours, map link.
+
+## 12) SEO, PWA, ANALYTICS
+- Metadata, OpenGraph images, sitemap, robots.
+- PWA manifest & icons; offline basic page.
+- Simple analytics (Plausible or GA via env toggle).
+
+## 13) DOCKER & NGINX
+- docker-compose services:
+  - nginx (expose 80,443; mounts certs, conf.d)
+  - web (Next.js built -> standalone output; serves on 3000)
+  - api (Node/Express on 4000)
+  - db (Postgres 15, volume)
+  - redis (alpine)
+  - certbot (for TLS)
+- Nginx:
+  - / → proxy_pass web:3000
+  - /api → proxy_pass api:4000
+  - /media → alias to uploads volume (cache 7d, no index)
+  - gzip/br compression; security headers; HSTS.
+
+## 14) SCRIPTS
+- /infra/scripts/bootstrap.sh
+  - install docker + compose
+  - create network and volumes
+  - generate .env files from samples (random JWT_SECRET)
+  - run docker compose up -d
+  - run prisma migrate + seed
+- /infra/scripts/backup.sh (pg_dump to /backups daily via cron)
+- /infra/scripts/rotate-logs.sh (optional)
+
+## 15) ENV VARS
+- Common: NODE_ENV=production, TZ=America/New_York
+- API:
+  - DATABASE_URL=postgresql://supanos:password@db:5432/supanos
+  - JWT_SECRET=...
+  - SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, RESERVATION_EMAIL_FROM
+  - SPORTS_PROVIDER, SPORTS_API_KEY
+  - UPLOAD_DIR=/uploads
+- WEB:
+  - NEXT_PUBLIC_SITE_URL=https://supanos.example.com
+  - NEXT_PUBLIC_ENABLE_SCORES=true
+- DB: POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB=supanos
+
+## 16) TESTS
+- Backend: unit tests for validators/controllers; e2e for /api/reservations, /api/menu.
+- Frontend: Playwright smoke (home/menu/reservations/admin login).
+- CI: run tests on PR; build docker images.
+
+## 17) PERFORMANCE
+- Image optimization (sharp on upload → webp, multiple sizes).
+- Next.js static generation for menu/events; revalidate.
+- CDN headers via Nginx for /media.
+
+## 18) DELIVERABLES
+- Droplet live at https://supanos.example.com with:
+  - Admin panel fully functional (add category/item with image, events, reservations)
+  - Live NFL/MLB scores on ticker and /scores
+  - Seeded content visible
+  - TLS OK, logs flowing, backups scheduled
+  - First-login prompt to change admin password

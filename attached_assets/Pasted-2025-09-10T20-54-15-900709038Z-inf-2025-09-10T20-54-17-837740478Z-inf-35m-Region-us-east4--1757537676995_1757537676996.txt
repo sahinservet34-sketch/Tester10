@@ -1,0 +1,82 @@
+2025-09-10T20:54:15.900709038Z [inf]  
+2025-09-10T20:54:17.837740478Z [inf]  [35m[Region: us-east4][0m
+2025-09-10T20:54:17.843150459Z [inf]  [35m=========================
+2025-09-10T20:54:17.843173091Z [inf]  Using Detected Dockerfile
+2025-09-10T20:54:17.843176633Z [inf]  =========================
+2025-09-10T20:54:17.843180345Z [inf]  [0m
+2025-09-10T20:54:17.843192187Z [inf]  context: 505p-5P6F
+2025-09-10T20:54:18.016073088Z [inf]  [internal] load build definition from Dockerfile
+2025-09-10T20:54:18.016126608Z [inf]  [internal] load build definition from Dockerfile
+2025-09-10T20:54:18.016219453Z [inf]  [internal] load build definition from Dockerfile
+2025-09-10T20:54:18.028467537Z [inf]  [internal] load build definition from Dockerfile
+2025-09-10T20:54:18.030895611Z [inf]  [internal] load metadata for docker.io/library/node:20-alpine
+2025-09-10T20:54:18.097621398Z [inf]  [internal] load metadata for docker.io/library/node:20-alpine
+2025-09-10T20:54:18.098570227Z [inf]  [internal] load .dockerignore
+2025-09-10T20:54:18.098656431Z [inf]  [internal] load .dockerignore
+2025-09-10T20:54:18.098689403Z [inf]  [internal] load .dockerignore
+2025-09-10T20:54:18.108542372Z [inf]  [internal] load .dockerignore
+2025-09-10T20:54:18.112308150Z [inf]  [builder 5/6] COPY . .
+2025-09-10T20:54:18.112356698Z [inf]  [builder 4/6] RUN npm ci
+2025-09-10T20:54:18.112371775Z [inf]  [builder 3/6] COPY package*.json ./
+2025-09-10T20:54:18.112381773Z [inf]  [builder 2/6] WORKDIR /app
+2025-09-10T20:54:18.112393200Z [inf]  [production  7/12] RUN npm ci --production && npm cache clean --force
+2025-09-10T20:54:18.112405744Z [inf]  [builder 1/6] FROM docker.io/library/node:20-alpine@sha256:eabac870db94f7342d6c33560d6613f188bbcf4bbe1f4eb47d5e2a08e1a37722
+2025-09-10T20:54:18.112419275Z [inf]  [internal] load build context
+2025-09-10T20:54:18.112431691Z [inf]  [production  5/12] RUN adduser -S nextjs -u 1001
+2025-09-10T20:54:18.112442398Z [inf]  [production  4/12] RUN addgroup -g 1001 -S nodejs
+2025-09-10T20:54:18.112452022Z [inf]  [production  3/12] WORKDIR /app
+2025-09-10T20:54:18.112461174Z [inf]  [production  2/12] RUN npm install -g pm2
+2025-09-10T20:54:18.112478131Z [inf]  [builder 6/6] RUN npm run build
+2025-09-10T20:54:18.112485968Z [inf]  [production  6/12] COPY package*.json ./
+2025-09-10T20:54:18.112503661Z [inf]  [production  9/12] COPY --from=builder --chown=nextjs:nodejs /app/client/dist ./client/dist
+2025-09-10T20:54:18.112512608Z [inf]  [production  8/12] COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
+2025-09-10T20:54:18.112528451Z [inf]  [production 12/12] RUN mkdir logs && chown nextjs:nodejs logs
+2025-09-10T20:54:18.112538127Z [inf]  [production 11/12] COPY --chown=nextjs:nodejs ecosystem.config.js ./
+2025-09-10T20:54:18.112544147Z [inf]  [production 10/12] COPY --from=builder --chown=nextjs:nodejs /app/shared ./shared
+2025-09-10T20:54:18.112561940Z [inf]  [internal] load build context
+2025-09-10T20:54:18.112568464Z [inf]  [builder 1/6] FROM docker.io/library/node:20-alpine@sha256:eabac870db94f7342d6c33560d6613f188bbcf4bbe1f4eb47d5e2a08e1a37722
+2025-09-10T20:54:18.117934544Z [inf]  [builder 1/6] FROM docker.io/library/node:20-alpine@sha256:eabac870db94f7342d6c33560d6613f188bbcf4bbe1f4eb47d5e2a08e1a37722
+2025-09-10T20:54:18.119531618Z [inf]  [internal] load build context
+2025-09-10T20:54:18.156010803Z [inf]  [internal] load build context
+2025-09-10T20:54:18.160459527Z [inf]  [builder 2/6] WORKDIR /app
+2025-09-10T20:54:18.160498552Z [inf]  [builder 3/6] COPY package*.json ./
+2025-09-10T20:54:18.160515447Z [inf]  [builder 4/6] RUN npm ci
+2025-09-10T20:54:18.160533123Z [inf]  [builder 5/6] COPY . .
+2025-09-10T20:54:18.160573203Z [inf]  [production  2/12] RUN npm install -g pm2
+2025-09-10T20:54:18.160585372Z [inf]  [production  3/12] WORKDIR /app
+2025-09-10T20:54:18.160596564Z [inf]  [production  4/12] RUN addgroup -g 1001 -S nodejs
+2025-09-10T20:54:18.160608054Z [inf]  [production  5/12] RUN adduser -S nextjs -u 1001
+2025-09-10T20:54:18.160624938Z [inf]  [production  6/12] COPY package*.json ./
+2025-09-10T20:54:18.160632997Z [inf]  [builder 6/6] RUN npm run build
+2025-09-10T20:54:18.160648161Z [inf]  [production  7/12] RUN npm ci --production && npm cache clean --force
+2025-09-10T20:54:18.41953449Z [inf]  npm warn config production Use `--omit=dev` instead.
+
+2025-09-10T20:54:18.459305599Z [inf]  
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+
+2025-09-10T20:54:18.681964295Z [inf]  vite v5.4.19 building for production...
+
+2025-09-10T20:54:18.717472439Z [inf]  ✓ 0 modules transformed.
+
+2025-09-10T20:54:18.719333286Z [inf]  x Build failed in 9ms
+
+2025-09-10T20:54:18.719351553Z [inf]  error during build:
+Could not resolve entry module "client/index.html".
+    at getRollupError (file:///app/node_modules/rollup/dist/es/shared/parseAst.js:396:41)
+    at error (file:///app/node_modules/rollup/dist/es/shared/parseAst.js:392:42)
+    at ModuleLoader.loadEntryModule (file:///app/node_modules/rollup/dist/es/shared/node-entry.js:20086:20)
+    at async Promise.all (index 0)
+
+2025-09-10T20:54:21.107673492Z [err]  [builder 6/6] RUN npm run build
+2025-09-10T20:54:22.055544198Z [err]  [production  7/12] RUN npm ci --production && npm cache clean --force
+2025-09-10T20:54:22.071934905Z [err]  Dockerfile:17
+2025-09-10T20:54:22.072071345Z [err]  -------------------
+2025-09-10T20:54:22.072079511Z [err]  15 |
+2025-09-10T20:54:22.072087248Z [err]  16 |     # Build the application
+2025-09-10T20:54:22.072096207Z [err]  17 | >>> RUN npm run build
+2025-09-10T20:54:22.072101524Z [err]  18 |
+2025-09-10T20:54:22.072106931Z [err]  19 |     # Production stage
+2025-09-10T20:54:22.072113119Z [err]  -------------------
+2025-09-10T20:54:22.072123726Z [err]  ERROR: failed to build: failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1

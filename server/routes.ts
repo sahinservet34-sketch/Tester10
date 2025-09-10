@@ -443,40 +443,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { date } = req.query;
       const scoreDate = date as string || new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0];
       
-      // Mock data for now - in production this would call ESPN API or SportsData API
+      // Generate dynamic mock data based on the requested date
+      const generateMockData = (requestedDate: string) => {
+        const isToday = requestedDate === today;
+        const isPast = requestedDate < today;
+        const isFuture = requestedDate > today;
+        
+        if (isPast) {
+          // Yesterday - show final games
+          return {
+            NFL: [
+              {
+                id: `nfl-${requestedDate}-1`,
+                startTime: `${requestedDate}T20:20:00Z`,
+                status: "final",
+                home: { abbr: "KC", name: "Kansas City Chiefs", score: 28 },
+                away: { abbr: "BUF", name: "Buffalo Bills", score: 21 },
+                details: { quarter: "Final", clock: "" }
+              },
+              {
+                id: `nfl-${requestedDate}-2`,
+                startTime: `${requestedDate}T17:00:00Z`,
+                status: "final",
+                home: { abbr: "DAL", name: "Dallas Cowboys", score: 24 },
+                away: { abbr: "NYG", name: "New York Giants", score: 17 },
+                details: { quarter: "Final", clock: "" }
+              }
+            ],
+            MLB: [
+              {
+                id: `mlb-${requestedDate}-1`,
+                startTime: `${requestedDate}T19:00:00Z`,
+                status: "final",
+                home: { abbr: "NYY", name: "New York Yankees", score: 8 },
+                away: { abbr: "BOS", name: "Boston Red Sox", score: 5 },
+                details: { inning: "Final", outs: "" }
+              }
+            ]
+          };
+        } else if (isFuture) {
+          // Tomorrow - show scheduled games
+          return {
+            NFL: [
+              {
+                id: `nfl-${requestedDate}-1`,
+                startTime: `${requestedDate}T20:20:00Z`,
+                status: "scheduled",
+                home: { abbr: "SEA", name: "Seattle Seahawks", score: null },
+                away: { abbr: "SF", name: "San Francisco 49ers", score: null },
+                details: { quarter: "", clock: "" }
+              },
+              {
+                id: `nfl-${requestedDate}-2`,
+                startTime: `${requestedDate}T17:00:00Z`,
+                status: "scheduled",
+                home: { abbr: "GB", name: "Green Bay Packers", score: null },
+                away: { abbr: "CHI", name: "Chicago Bears", score: null },
+                details: { quarter: "", clock: "" }
+              }
+            ],
+            MLB: [
+              {
+                id: `mlb-${requestedDate}-1`,
+                startTime: `${requestedDate}T19:00:00Z`,
+                status: "scheduled",
+                home: { abbr: "LAD", name: "Los Angeles Dodgers", score: null },
+                away: { abbr: "SD", name: "San Diego Padres", score: null },
+                details: { inning: "", outs: "" }
+              }
+            ]
+          };
+        } else {
+          // Today - show mix of live and final games
+          return {
+            NFL: [
+              {
+                id: `nfl-${requestedDate}-1`,
+                startTime: `${requestedDate}T20:20:00Z`,
+                status: "live",
+                home: { abbr: "KC", name: "Kansas City Chiefs", score: 21 },
+                away: { abbr: "BUF", name: "Buffalo Bills", score: 14 },
+                details: { quarter: "Q3", clock: "8:45" }
+              },
+              {
+                id: `nfl-${requestedDate}-2`,
+                startTime: `${requestedDate}T17:00:00Z`,
+                status: "final",
+                home: { abbr: "DAL", name: "Dallas Cowboys", score: 28 },
+                away: { abbr: "NYG", name: "New York Giants", score: 21 },
+                details: { quarter: "Final", clock: "" }
+              }
+            ],
+            MLB: [
+              {
+                id: `mlb-${requestedDate}-1`,
+                startTime: `${requestedDate}T19:00:00Z`,
+                status: "final",
+                home: { abbr: "NYY", name: "New York Yankees", score: 7 },
+                away: { abbr: "BOS", name: "Boston Red Sox", score: 4 },
+                details: { inning: "Final", outs: "" }
+              }
+            ]
+          };
+        }
+      };
+      
       const mockScores = {
         date: scoreDate,
-        leagues: {
-          NFL: [
-            {
-              id: "1",
-              startTime: "2025-01-14T20:20:00Z",
-              status: "live",
-              home: { abbr: "KC", name: "Kansas City Chiefs", score: 21 },
-              away: { abbr: "BUF", name: "Buffalo Bills", score: 14 },
-              details: { quarter: "Q3", clock: "8:45" }
-            },
-            {
-              id: "2",
-              startTime: "2025-01-14T17:00:00Z",
-              status: "final",
-              home: { abbr: "DAL", name: "Dallas Cowboys", score: 28 },
-              away: { abbr: "NYG", name: "New York Giants", score: 21 },
-              details: { quarter: "Final", clock: "" }
-            }
-          ],
-          MLB: [
-            {
-              id: "3",
-              startTime: "2025-01-14T19:00:00Z",
-              status: "final",
-              home: { abbr: "NYY", name: "New York Yankees", score: 7 },
-              away: { abbr: "BOS", name: "Boston Red Sox", score: 4 },
-              details: { inning: "9", outs: "3" }
-            }
-          ]
-        }
+        leagues: generateMockData(scoreDate)
       };
       
       res.json(mockScores);

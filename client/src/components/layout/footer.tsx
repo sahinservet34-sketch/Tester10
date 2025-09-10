@@ -3,9 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { Facebook, Instagram, Twitter, Youtube, MapPin, Phone, Mail } from "lucide-react";
 
 export default function Footer() {
-  const { data: settings } = useQuery({
+  const { data: settingsArray } = useQuery({
     queryKey: ["/api/settings"],
   });
+
+  // Convert settings array to object for easier access
+  const settings = settingsArray?.reduce((acc: any, setting: any) => {
+    acc[setting.key] = setting.value;
+    return acc;
+  }, {});
 
   return (
     <footer className="bg-primary py-12 border-t border-border">

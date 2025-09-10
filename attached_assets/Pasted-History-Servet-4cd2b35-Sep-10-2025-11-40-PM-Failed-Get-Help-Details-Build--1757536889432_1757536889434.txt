@@ -1,0 +1,119 @@
+History
+
+
+
+
+
+Servet
+/
+4cd2b35
+Sep 10, 2025, 11:40 PM
+Failed
+
+Get Help
+
+Details
+Build Logs
+Deploy Logs
+Search build logs
+
+You reached the start of the range
+Sep 10, 2025, 11:40 PM
+ 
+[Region: us-east4]
+=========================
+Using Detected Dockerfile
+=========================
+
+context: 1qfw-51J8
+
+internal
+load build definition from Dockerfile
+0ms
+
+internal
+load metadata for docker.io/library/node:20-alpine
+123ms
+
+auth
+library/node:pull token for registry-1.docker.io
+0ms
+
+internal
+load .dockerignore
+0ms
+
+internal
+load build context
+0ms
+
+builder
+FROM docker.io/library/node:20-alpine@sha256:eabac870db94f7342d6c33560d6613f188bbcf4bbe1f4eb47d5e2a08e1a37722 cached
+8ms
+
+production
+RUN npm install -g pm2
+4s
+npm notice
+
+builder
+WORKDIR /app
+105ms
+
+builder
+COPY package*.json ./
+171ms
+
+builder
+RUN npm ci
+7s
+npm notice
+
+production
+WORKDIR /app
+116ms
+
+production
+RUN addgroup -g 1001 -S nodejs
+161ms
+
+production
+RUN adduser -S nextjs -u 1001
+93ms
+
+production
+COPY package*.json ./
+23ms
+
+production
+RUN npm ci --production && npm cache clean --force
+3s
+npm warn config production Use `--omit=dev` instead.
+
+builder
+COPY . .
+144ms
+
+builder
+RUN npm run build
+662ms
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+vite v5.4.19 building for production...
+✓ 0 modules transformed.
+x Build failed in 11ms
+error during build:
+Could not resolve entry module "client/index.html".
+    at getRollupError (file:///app/node_modules/rollup/dist/es/shared/parseAst.js:396:41)
+    at error (file:///app/node_modules/rollup/dist/es/shared/parseAst.js:392:42)
+    at ModuleLoader.loadEntryModule (file:///app/node_modules/rollup/dist/es/shared/node-entry.js:20086:20)
+    at async Promise.all (index 0)
+Dockerfile:17
+-------------------
+15 |
+16 |     # Build the application
+17 | >>> RUN npm run build
+18 |
+19 |     # Production stage
+-------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 1

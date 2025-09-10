@@ -1,0 +1,10 @@
+node_modules
+.git
+.cache
+.replit
+.upm
+*.md
+.do
+.local
+.config
+dist

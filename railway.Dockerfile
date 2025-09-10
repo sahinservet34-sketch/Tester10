@@ -7,16 +7,16 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install ALL dependencies (including dev for build)
-RUN npm install
+RUN npm ci
 
 # Copy source code  
 COPY . .
 
-# Build the application
-RUN npm run build
+# Build the application using explicit commands
+RUN npx vite build && npx esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
 
 # Remove dev dependencies for smaller image
-RUN npm prune --production
+RUN npm ci --only=production && npm cache clean --force
 
 # Expose port
 EXPOSE 8080
